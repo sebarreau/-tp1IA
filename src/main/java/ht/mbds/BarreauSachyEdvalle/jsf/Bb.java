@@ -1,12 +1,14 @@
 package ht.mbds.BarreauSachyEdvalle.jsf;
 
-import ht.mbds.barreausachyedvalle.tp0barreau_sachy_edvaelle.service.Modificateur;
+import ht.mbds.BarreauSachyEdvalle.llm.LlmInteraction;
+import ht.mbds.BarreauSachyEdvalle.llm.JsonAdapterPourGemini;
 import jakarta.faces.application.FacesMessage;
 import jakarta.faces.context.FacesContext;
 import jakarta.faces.model.SelectItem;
 import jakarta.faces.view.ViewScoped;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
+import java.util.Arrays;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -50,12 +52,16 @@ public class Bb implements Serializable {
      * La conversation depuis le début.
      */
     private StringBuilder conversation = new StringBuilder();
+    private boolean debug;
 
+    private String texteRequeteJson;
+
+    private String texteReponseJson;
     /**
      * Service pour modifier la question et générer la réponse.
      */
     @Inject
-    private Modificateur modificateur;
+    private JsonAdapterPourGemini jsonAdapter;
 
     /**
      * Contexte JSF. Utilisé pour qu'un message d'erreur s'affiche dans le formulaire.
@@ -133,8 +139,20 @@ public class Bb implements Serializable {
             roleSystemePourModification = this.roleSysteme; // Pour Modificateur.modifier()
             // Invalide la liste pour changer le rôle système
             this.roleSystemeChangeable = false;
+            jsonAdapter.setSystemRole(this.roleSysteme);
         }
-        this.reponse += this.modificateur.modifier(this.question, roleSystemePourModification);
+        try {
+            LlmInteraction interaction = jsonAdapter.envoyerRequete(question);
+            this.reponse = interaction.reponseExtraite();
+            this.texteRequeteJson = interaction.questionJson();
+            this.texteReponseJson = interaction.reponseJson();
+        } catch (Exception e) {
+            FacesMessage message =
+                    new FacesMessage(FacesMessage.SEVERITY_ERROR,
+                            "Problème de connexion avec l'API du LLM",
+                            "Problème de connexion avec l'API du LLM" + e.getMessage() + "\n" + Arrays.toString(e.getStackTrace()));
+            facesContext.addMessage(null, message);
+        }
 
         // La conversation contient l'historique des questions-réponses depuis le début.
         afficherConversation();
@@ -190,6 +208,32 @@ public class Bb implements Serializable {
         }
 
         return this.listeRolesSysteme;
+    }
+    public boolean isDebug() {
+        return debug;
+    }
+
+    public void setDebug(boolean debug) {
+        this.debug = debug;
+    }
+
+    public String getTexteRequeteJson() {
+        return texteRequeteJson;
+    }
+
+    public void setTexteRequeteJson(String texteRequeteJson) {
+        this.texteRequeteJson = texteRequeteJson;
+    }
+
+    public String getTexteReponseJson() {
+        return texteReponseJson;
+    }
+
+    public void setTexteReponseJson(String texteReponseJson) {
+        this.texteReponseJson = texteReponseJson;
+    }
+    public void toggleDebug() {
+        this.setDebug(!isDebug());
     }
 
 }
