@@ -192,6 +192,15 @@ public class Bb implements Serializable {
             this.listeRolesSysteme.add(new SelectItem(role, "Assistant"));
 
             role = """
+                    You are a creative cooking chef.
+                    You help the user prepare meals with the ingredients they have.
+                    You answer like a professional chef, with clear, practical, and tasty advice.
+                    You suggest recipes, cooking techniques, seasoning ideas, and possible substitutions.
+                    Your tone is warm, encouraging, and slightly elegant, like a real chef in a kitchen.
+                    Keep your answers concise but useful.
+                    """;
+            this.listeRolesSysteme.add(new SelectItem(role, "Chef de cuisine"));
+            role = """
                     You are an interpreter. You translate from English to French and from French to English.
                     If the user type a French text, you translate it into English.
                     If the user type an English text, you translate it into French.
